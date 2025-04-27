@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.teacherhoursdesktop.controllers.MainController">
+
+    <center>
+        <TabPane>
+            <Tab text="Преподаватели">
+                <TableView fx:id="teachersTable">
+                    <columns>
+                        <TableColumn text="ФИО" fx:id="fullNameColumn">
+                            <cellValueFactory>
+                                <PropertyValueFactory property="fullName"/>
+                            </cellValueFactory>
+                        </TableColumn>
+                        <TableColumn text="Кафедра" fx:id="departmentColumn">
+                            <cellValueFactory>
+                                <PropertyValueFactory property="department"/>
+                            </cellValueFactory>
+                        </TableColumn>
+                    </columns>
+                </TableView>
+            </Tab>
+
+            <Tab text="Учет часов">
+                <VBox spacing="10" style="-fx-padding: 15;">
+                    <Label text="Выберите преподавателя:"/>
+                    <TableView fx:id="hoursTeachersTable">
+                        <columns>
+                            <TableColumn text="ФИО" fx:id="hoursTeacherColumn">
+                                <cellValueFactory>
+                                    <PropertyValueFactory property="fullName"/>
+                                </cellValueFactory>
+                            </TableColumn>
+                        </columns>
+                    </TableView>
+
+                    <Label text="Дата занятия:"/>
+                    <DatePicker fx:id="datePicker"/>
+
+                    <Label text="Тип занятия:"/>
+                    <ComboBox fx:id="lessonTypeCombo" promptText="Выберите тип"/>
+
+                    <Label text="Количество часов:"/>
+                    <TextField fx:id="hoursField"/>
+
+                    <Button text="Добавить запись" onAction="#handleAddRecord"
+                            style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+</BorderPane>
