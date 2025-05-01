@@ -24,38 +24,51 @@ public class ScheduleController {
     @FXML private TableColumn<WorkRecord, Integer> hoursColumn;
     @FXML private TableColumn<WorkRecord, String> typeColumn;
 
-    private ObservableList<Teacher> teachers;
-    private ObservableList<String> periods = FXCollections.observableArrayList("Неделя", "Месяц");
-
     @FXML
     public void initialize() {
-        setupPeriodCombo();
-        setupTeacherCombo();
-        setupScheduleTable();
-    }
-
-    private void setupPeriodCombo() {
-        periodCombo.setItems(periods);
+        // Инициализация списка периодов
+        periodCombo.setItems(FXCollections.observableArrayList("Неделя", "Месяц"));
         periodCombo.getSelectionModel().selectFirst();
+
+        // Загрузка преподавателей
+        loadTeachers();
+
+        // Настройка таблицы
+        setupScheduleTable();
+
+        // Обработчики изменений
+        teacherCombo.getSelectionModel().selectedItemProperty().addListener(
+                (obs, oldVal, newVal) -> updateSchedule());
+        periodCombo.getSelectionModel().selectedItemProperty().addListener(
+                (obs, oldVal, newVal) -> updateSchedule());
     }
 
-    private void setupTeacherCombo() {
-        teachers = FXCollections.observableArrayList(Database.getAllTeachers());
-        teacherCombo.setItems(teachers);
-        teacherCombo.setCellFactory(param -> new ListCell<>() {
+    private void loadTeachers() {
+        List<Teacher> teachers = Database.getAllTeachers();
+        ObservableList<Teacher> teacherList = FXCollections.observableArrayList(teachers);
+        teacherCombo.setItems(teacherList);
+
+        // Настройка отображения ФИО преподавателей в ComboBox
+        teacherCombo.setCellFactory(param -> new ListCell<Teacher>() {
             @Override
             protected void updateItem(Teacher item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.getFullName());
             }
         });
-        teacherCombo.setButtonCell(new ListCell<>() {
+
+        teacherCombo.setButtonCell(new ListCell<Teacher>() {
             @Override
             protected void updateItem(Teacher item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.getFullName());
             }
         });
+
+        // Автоматически выбираем первого преподавателя, если есть
+        if (!teacherList.isEmpty()) {
+            teacherCombo.getSelectionModel().selectFirst();
+        }
     }
 
     private void setupScheduleTable() {
@@ -64,48 +77,57 @@ public class ScheduleController {
         hoursColumn.setCellValueFactory(new PropertyValueFactory<>("hours"));
         typeColumn.setCellValueFactory(new PropertyValueFactory<>("lessonType"));
 
-        // Make hours editable
         hoursColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         hoursColumn.setOnEditCommit(event -> {
             WorkRecord record = event.getRowValue();
             int newHours = event.getNewValue();
-            record.setHours(newHours);
-            Database.updateWorkRecord(record.getId(), newHours);
+
+            // Валидация вводимых часов
+            if (newHours < 0) {
+                showAlert("Ошибка", "Количество часов не может быть отрицательным");
+                scheduleTable.refresh();
+                return;
+            }
+
+            // Обновляем запись в базе данных
+            boolean success = Database.updateWorkRecord(record.getId(), newHours);
+
+            if (success) {
+                record.setHours(newHours);
+            } else {
+                showAlert("Ошибка", "Не удалось обновить запись");
+                scheduleTable.refresh();
+            }
         });
     }
 
-    @FXML
-    private void handleTeacherSelected() {
-        Teacher selected = teacherCombo.getSelectionModel().getSelectedItem();
-        String period = periodCombo.getSelectionModel().getSelectedItem();
+    private void updateSchedule() {
+        Teacher selectedTeacher = teacherCombo.getSelectionModel().getSelectedItem();
+        String selectedPeriod = periodCombo.getSelectionModel().getSelectedItem();
 
-        if (selected != null && period != null) {
-            loadSchedule(selected.getId(), period);
+        if (selectedTeacher != null && selectedPeriod != null) {
+            LocalDate startDate, endDate;
+
+            if ("Неделя".equals(selectedPeriod)) {
+                startDate = LocalDate.now().with(DayOfWeek.MONDAY);
+                endDate = startDate.plusDays(6);
+            } else {
+                startDate = LocalDate.now().withDayOfMonth(1);
+                endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+            }
+
+            List<WorkRecord> records = Database.getScheduleForTeacher(
+                    selectedTeacher.getId(), startDate, endDate);
+
+            scheduleTable.getItems().setAll(records);
         }
     }
 
-    @FXML
-    private void handlePeriodChanged() {
-        Teacher selected = teacherCombo.getSelectionModel().getSelectedItem();
-        String period = periodCombo.getSelectionModel().getSelectedItem();
-
-        if (selected != null && period != null) {
-            loadSchedule(selected.getId(), period);
-        }
-    }
-
-    private void loadSchedule(int teacherId, String period) {
-        LocalDate startDate, endDate;
-
-        if ("Неделя".equals(period)) {
-            startDate = LocalDate.now().with(DayOfWeek.MONDAY);
-            endDate = startDate.plusDays(6);
-        } else {
-            startDate = LocalDate.now().withDayOfMonth(1);
-            endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
-        }
-
-        List<WorkRecord> records = Database.getScheduleForTeacher(teacherId, startDate, endDate);
-        scheduleTable.setItems(FXCollections.observableArrayList(records));
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

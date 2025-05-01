@@ -19,7 +19,7 @@ public class WorkRecord {
         this.lessonType = new SimpleStringProperty(lessonType);
     }
 
-    // Getters and setters
+    // Геттеры и сеттеры
     public int getId() { return id.get(); }
     public IntegerProperty idProperty() { return id; }
 

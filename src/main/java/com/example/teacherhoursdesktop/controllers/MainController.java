@@ -2,13 +2,16 @@ package com.example.teacherhoursdesktop.controllers;
 
 import com.example.teacherhoursdesktop.models.Teacher;
 import com.example.teacherhoursdesktop.utils.Database;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.Pair;
 import javafx.util.converter.IntegerStringConverter;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,8 +22,6 @@ public class MainController {
     @FXML private TableColumn<Teacher, Integer> plannedHoursColumn;
     @FXML private TableColumn<Teacher, Integer> completedHoursColumn;
     @FXML private Button addTeacherButton;
-
-    private ObservableList<Teacher> teachers;
 
     @FXML
     public void initialize() {
@@ -34,18 +35,24 @@ public class MainController {
         plannedHoursColumn.setCellValueFactory(new PropertyValueFactory<>("plannedHours"));
         completedHoursColumn.setCellValueFactory(new PropertyValueFactory<>("completedHours"));
 
-        // Make planned hours editable
         plannedHoursColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         plannedHoursColumn.setOnEditCommit(event -> {
             Teacher teacher = event.getRowValue();
             int newHours = event.getNewValue();
-            teacher.setPlannedHours(newHours);
-            Database.updateTeacherHours(teacher.getId(), newHours);
+            if (newHours >= 0) {
+                teacher.setPlannedHours(newHours);
+                Database.updateTeacherHours(teacher.getId(), newHours);
+            } else {
+                showAlert("Ошибка", "Часы не могут быть отрицательными");
+                teachersTable.refresh();
+            }
         });
+
+        teachersTable.setEditable(true);
     }
 
     private void loadTeachers() {
-        teachers = javafx.collections.FXCollections.observableArrayList(Database.getAllTeachers());
+        ObservableList<Teacher> teachers = FXCollections.observableArrayList(Database.getAllTeachers());
         teachersTable.setItems(teachers);
     }
 
@@ -72,7 +79,7 @@ public class MainController {
 
                 Optional<String> groupsResult = groupsDialog.showAndWait();
                 groupsResult.ifPresent(groups -> {
-                    List<String> groupList = List.of(groups.split(","));
+                    List<String> groupList = Arrays.asList(groups.split(","));
                     if (Database.addTeacher(fullName, department, groupList)) {
                         loadTeachers(); // Refresh table
                     } else {

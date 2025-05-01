@@ -14,11 +14,11 @@
             <HBox spacing="10" alignment="CENTER_RIGHT">
                 <Button text="Добавить преподавателя" fx:id="addTeacherButton" onAction="#handleAddTeacher"/>
             </HBox>
-            <TableView fx:id="teachersTable">
+            <TableView fx:id="teachersTable" editable="true">
                 <columns>
                     <TableColumn text="ФИО" fx:id="fullNameColumn" prefWidth="200"/>
                     <TableColumn text="Кафедра" fx:id="departmentColumn" prefWidth="150"/>
-                    <TableColumn text="Плановые часы" fx:id="plannedHoursColumn" prefWidth="100"/>
+                    <TableColumn text="Плановые часы" fx:id="plannedHoursColumn" prefWidth="100" editable="true"/>
                     <TableColumn text="Отработано" fx:id="completedHoursColumn" prefWidth="100"/>
                 </columns>
             </TableView>
@@ -33,11 +33,11 @@
                 <Label text="Период:"/>
                 <ComboBox fx:id="periodCombo" prefWidth="100"/>
             </HBox>
-            <TableView fx:id="scheduleTable">
+            <TableView fx:id="scheduleTable" editable="true">
                 <columns>
                     <TableColumn text="Дата" fx:id="dateColumn" prefWidth="120"/>
                     <TableColumn text="Группа" fx:id="groupColumn" prefWidth="150"/>
-                    <TableColumn text="Часы" fx:id="hoursColumn" prefWidth="80"/>
+                    <TableColumn text="Часы" fx:id="hoursColumn" prefWidth="80" editable="true"/>
                     <TableColumn text="Тип занятия" fx:id="typeColumn" prefWidth="150"/>
                 </columns>
             </TableView>
