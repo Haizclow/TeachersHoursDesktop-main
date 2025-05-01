@@ -4,55 +4,43 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.teacherhoursdesktop.controllers.MainController">
+<TabPane xmlns="http://javafx.com/javafx"
+         xmlns:fx="http://javafx.com/fxml/1"
+         fx:controller="com.example.teacherhoursdesktop.controllers.MainController"
+         tabClosingPolicy="UNAVAILABLE">
 
-    <center>
-        <TabPane>
-            <Tab text="Преподаватели">
-                <TableView fx:id="teachersTable">
-                    <columns>
-                        <TableColumn text="ФИО" fx:id="fullNameColumn">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="fullName"/>
-                            </cellValueFactory>
-                        </TableColumn>
-                        <TableColumn text="Кафедра" fx:id="departmentColumn">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="department"/>
-                            </cellValueFactory>
-                        </TableColumn>
-                    </columns>
-                </TableView>
-            </Tab>
+    <Tab text="Преподаватели">
+        <VBox spacing="10" style="-fx-padding: 15;">
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Добавить преподавателя" fx:id="addTeacherButton" onAction="#handleAddTeacher"/>
+            </HBox>
+            <TableView fx:id="teachersTable">
+                <columns>
+                    <TableColumn text="ФИО" fx:id="fullNameColumn" prefWidth="200"/>
+                    <TableColumn text="Кафедра" fx:id="departmentColumn" prefWidth="150"/>
+                    <TableColumn text="Плановые часы" fx:id="plannedHoursColumn" prefWidth="100"/>
+                    <TableColumn text="Отработано" fx:id="completedHoursColumn" prefWidth="100"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </Tab>
 
-            <Tab text="Учет часов">
-                <VBox spacing="10" style="-fx-padding: 15;">
-                    <Label text="Выберите преподавателя:"/>
-                    <TableView fx:id="hoursTeachersTable">
-                        <columns>
-                            <TableColumn text="ФИО" fx:id="hoursTeacherColumn">
-                                <cellValueFactory>
-                                    <PropertyValueFactory property="fullName"/>
-                                </cellValueFactory>
-                            </TableColumn>
-                        </columns>
-                    </TableView>
-
-                    <Label text="Дата занятия:"/>
-                    <DatePicker fx:id="datePicker"/>
-
-                    <Label text="Тип занятия:"/>
-                    <ComboBox fx:id="lessonTypeCombo" promptText="Выберите тип"/>
-
-                    <Label text="Количество часов:"/>
-                    <TextField fx:id="hoursField"/>
-
-                    <Button text="Добавить запись" onAction="#handleAddRecord"
-                            style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
-                </VBox>
-            </Tab>
-        </TabPane>
-    </center>
-</BorderPane>
+    <Tab text="Расписание">
+        <VBox spacing="10" style="-fx-padding: 15;">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Преподаватель:"/>
+                <ComboBox fx:id="teacherCombo" prefWidth="300"/>
+                <Label text="Период:"/>
+                <ComboBox fx:id="periodCombo" prefWidth="100"/>
+            </HBox>
+            <TableView fx:id="scheduleTable">
+                <columns>
+                    <TableColumn text="Дата" fx:id="dateColumn" prefWidth="120"/>
+                    <TableColumn text="Группа" fx:id="groupColumn" prefWidth="150"/>
+                    <TableColumn text="Часы" fx:id="hoursColumn" prefWidth="80"/>
+                    <TableColumn text="Тип занятия" fx:id="typeColumn" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </Tab>
+</TabPane>

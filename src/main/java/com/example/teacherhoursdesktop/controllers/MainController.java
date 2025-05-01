@@ -1,71 +1,86 @@
 package com.example.teacherhoursdesktop.controllers;
 
 import com.example.teacherhoursdesktop.models.Teacher;
-import javafx.fxml.FXML;  // Исправлено с javax на javafx
-import javafx.scene.control.*;
+import com.example.teacherhoursdesktop.utils.Database;
 import javafx.collections.ObservableList;
-import javafx.collections.FXCollections;
-import java.time.LocalDate;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.converter.IntegerStringConverter;
+
+import java.util.List;
+import java.util.Optional;
 
 public class MainController {
     @FXML private TableView<Teacher> teachersTable;
-    @FXML private TableView<Teacher> hoursTeachersTable;
     @FXML private TableColumn<Teacher, String> fullNameColumn;
     @FXML private TableColumn<Teacher, String> departmentColumn;
-    @FXML private TableColumn<Teacher, String> hoursTeacherColumn;
-    @FXML private DatePicker datePicker;
-    @FXML private ComboBox<String> lessonTypeCombo;
-    @FXML private TextField hoursField;
+    @FXML private TableColumn<Teacher, Integer> plannedHoursColumn;
+    @FXML private TableColumn<Teacher, Integer> completedHoursColumn;
+    @FXML private Button addTeacherButton;
 
-    private final ObservableList<Teacher> teachers = FXCollections.observableArrayList();
-    private final ObservableList<String> lessonTypes = FXCollections.observableArrayList(
-            "Лекция", "Практика", "Лабораторная", "Консультация", "Экзамен"
-    );
+    private ObservableList<Teacher> teachers;
 
     @FXML
     public void initialize() {
-        fullNameColumn.setCellValueFactory(cellData -> cellData.getValue().fullNameProperty());
-        departmentColumn.setCellValueFactory(cellData -> cellData.getValue().departmentProperty());
-        hoursTeacherColumn.setCellValueFactory(cellData -> cellData.getValue().fullNameProperty());
-
-        lessonTypeCombo.setItems(lessonTypes);
-        loadSampleData();
-        teachersTable.setItems(teachers);
-        hoursTeachersTable.setItems(teachers);
-        datePicker.setValue(LocalDate.now());
+        setupTeachersTable();
+        loadTeachers();
     }
 
-    private void loadSampleData() {
-        teachers.add(new Teacher(1, "Иванов И.И.", "Кафедра информатики"));
-        teachers.add(new Teacher(2, "Петрова С.М.", "Кафедра математики"));
-        teachers.add(new Teacher(3, "Сидоров А.В.", "Кафедра физики"));
+    private void setupTeachersTable() {
+        fullNameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+        departmentColumn.setCellValueFactory(new PropertyValueFactory<>("department"));
+        plannedHoursColumn.setCellValueFactory(new PropertyValueFactory<>("plannedHours"));
+        completedHoursColumn.setCellValueFactory(new PropertyValueFactory<>("completedHours"));
+
+        // Make planned hours editable
+        plannedHoursColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        plannedHoursColumn.setOnEditCommit(event -> {
+            Teacher teacher = event.getRowValue();
+            int newHours = event.getNewValue();
+            teacher.setPlannedHours(newHours);
+            Database.updateTeacherHours(teacher.getId(), newHours);
+        });
+    }
+
+    private void loadTeachers() {
+        teachers = javafx.collections.FXCollections.observableArrayList(Database.getAllTeachers());
+        teachersTable.setItems(teachers);
     }
 
     @FXML
-    private void handleAddRecord() {
-        try {
-            Teacher selectedTeacher = hoursTeachersTable.getSelectionModel().getSelectedItem();
-            LocalDate date = datePicker.getValue();
-            String lessonType = lessonTypeCombo.getValue();
-            int hours = Integer.parseInt(hoursField.getText());
+    private void handleAddTeacher() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Добавить преподавателя");
+        dialog.setHeaderText("Введите данные преподавателя");
+        dialog.setContentText("ФИО:");
 
-            if (selectedTeacher == null || date == null || lessonType == null || hours <= 0) {
-                showAlert("Ошибка", "Заполните все поля корректно!");
-                return;
-            }
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(fullName -> {
+            TextInputDialog deptDialog = new TextInputDialog();
+            deptDialog.setTitle("Кафедра");
+            deptDialog.setHeaderText("Введите кафедру для " + fullName);
+            deptDialog.setContentText("Кафедра:");
 
-            System.out.printf("Добавлена запись: %s, %s, %s, %d часов%n",
-                    selectedTeacher.getFullName(), date, lessonType, hours);
-            clearFields();
-        } catch (NumberFormatException e) {
-            showAlert("Ошибка", "Введите корректное количество часов!");
-        }
-    }
+            Optional<String> deptResult = deptDialog.showAndWait();
+            deptResult.ifPresent(department -> {
+                TextInputDialog groupsDialog = new TextInputDialog();
+                groupsDialog.setTitle("Группы");
+                groupsDialog.setHeaderText("Введите группы через запятую");
+                groupsDialog.setContentText("Группы:");
 
-    private void clearFields() {
-        hoursField.clear();
-        lessonTypeCombo.getSelectionModel().clearSelection();
-        datePicker.setValue(LocalDate.now());
+                Optional<String> groupsResult = groupsDialog.showAndWait();
+                groupsResult.ifPresent(groups -> {
+                    List<String> groupList = List.of(groups.split(","));
+                    if (Database.addTeacher(fullName, department, groupList)) {
+                        loadTeachers(); // Refresh table
+                    } else {
+                        showAlert("Ошибка", "Не удалось добавить преподавателя");
+                    }
+                });
+            });
+        });
     }
 
     private void showAlert(String title, String message) {

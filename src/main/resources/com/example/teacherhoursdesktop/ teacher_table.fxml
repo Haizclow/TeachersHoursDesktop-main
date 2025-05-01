@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.teacherhoursdesktop.controllers.TeacherTableController"
+      spacing="10" style="-fx-padding: 15;">
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <VBox spacing="5">
+            <Label text="Преподаватель:" style="-fx-font-weight: bold;"/>
+            <Label text="Кафедра:" style="-fx-font-weight: bold;"/>
+            <Label text="Всего часов:" style="-fx-font-weight: bold;"/>
+        </VBox>
+
+        <VBox spacing="5">
+            <Label fx:id="teacherNameLabel"/>
+            <Label fx:id="departmentLabel"/>
+            <Label fx:id="totalHoursLabel" style="-fx-text-fill: #2E7D32; -fx-font-weight: bold;"/>
+        </VBox>
+    </HBox>
+
+    <Separator/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Период:"/>
+        <DatePicker fx:id="fromDatePicker"/>
+        <Label text="-"/>
+        <DatePicker fx:id="toDatePicker"/>
+
+        <Label text="Группа:" style="-fx-padding: 0 0 0 20;"/>
+        <ComboBox fx:id="groupFilterCombo" prefWidth="150"/>
+
+        <Button text="Применить фильтр" onAction="#handleFilter"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+    </HBox>
+
+    <TableView fx:id="recordsTable" style="-fx-padding: 10 0 0 0;">
+        <columns>
+            <TableColumn text="Дата" fx:id="dateColumn" prefWidth="120"/>
+            <TableColumn text="Группа" fx:id="groupColumn" prefWidth="100"/>
+            <TableColumn text="Тип занятия" fx:id="typeColumn" prefWidth="150"/>
+            <TableColumn text="Часы" fx:id="hoursColumn" prefWidth="80"/>
+        </columns>
+    </TableView>
+</VBox>
